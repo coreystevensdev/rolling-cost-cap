@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.whl
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# BMad artifacts
+_bmad-output/
+_bmad/
+*_explained.md
+CLAUDE.md
+AGENTS.md
+
+# OS
+.DS_Store
