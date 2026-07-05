@@ -21,6 +21,8 @@ The core difficulty is that "expensive" is relative. $0.10 is an anomaly when yo
 
 Decision precedence: absolute ceiling, then monthly budget, then rolling median. The median layer stays dormant until `min_samples` costs have been recorded, so one cheap first call cannot set a hair-trigger baseline. A median of zero (free calls) also keeps it dormant rather than tripping on the first nonzero cost.
 
+**Implementation:** The rolling window is a fixed-size `collections.deque`. The median is computed via `statistics.median()` on a snapshot of the deque each evaluation, which is O(n log n). At realistic API-call rates this is noise; the snapshot approach was chosen over a two-heap incremental median because it is simpler to verify and the window is small. A `threading.Lock` guards all reads and writes so `evaluate` and `check` are safe to call from multiple threads or concurrent coroutines.
+
 This design was extracted from the cost-control layer of [InvoiceFlow](https://github.com/coreystevensdev/invoiceflow), where it runs in production as a post-call ceiling on Anthropic API spend.
 
 ## Usage
