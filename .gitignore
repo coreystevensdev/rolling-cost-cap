@@ -22,6 +22,7 @@ build/
 # BMad artifacts
 _bmad-output/
 _bmad/
+docs/superpowers/
 *_explained.md
 CLAUDE.md
 AGENTS.md
