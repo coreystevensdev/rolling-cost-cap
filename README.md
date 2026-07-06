@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/coreystevensdev/rolling-cost-cap/actions/workflows/ci.yml/badge.svg)](https://github.com/coreystevensdev/rolling-cost-cap/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/rolling-cost-cap)](https://pypi.org/project/rolling-cost-cap/)
+![27 tests](https://img.shields.io/badge/tests-27-brightgreen)
 
 A runaway-cost circuit breaker for LLM and metered API calls. Judges every observed cost against three independent layers: a rolling-median anomaly cap, an absolute per-call ceiling, and a cumulative monthly budget. Zero dependencies, thread-safe, fully typed, 27 tests.
 
