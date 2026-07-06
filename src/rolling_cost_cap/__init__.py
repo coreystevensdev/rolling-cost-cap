@@ -78,14 +78,12 @@ class CostCap:
         self._lock = threading.Lock()
 
     def check(self, cost: float) -> Decision:
-        """Judge a cost without recording it."""
         self._validate(cost)
         with self._lock:
             self._roll_month()
             return self._decide(cost)
 
     def record(self, cost: float) -> None:
-        """Record a cost into the rolling window and monthly total."""
         self._validate(cost)
         with self._lock:
             self._roll_month()
