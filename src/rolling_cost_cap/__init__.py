@@ -146,6 +146,8 @@ class CostCap:
         return Decision(True, None, cost, None, median, spend)
 
     def _median(self) -> float | None:
+        # re-sorts the window every call (O(n log n)) instead of an
+        # incremental two-heap median — see README Known Limitations
         if not self._history:
             return None
         return statistics.median(self._history)

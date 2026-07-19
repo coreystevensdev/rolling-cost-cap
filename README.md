@@ -2,9 +2,9 @@
 
 [![CI](https://github.com/coreystevensdev/rolling-cost-cap/actions/workflows/ci.yml/badge.svg)](https://github.com/coreystevensdev/rolling-cost-cap/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/rolling-cost-cap)](https://pypi.org/project/rolling-cost-cap/)
-![27 tests](https://img.shields.io/badge/tests-27-brightgreen)
+![29 tests](https://img.shields.io/badge/tests-29-brightgreen)
 
-A runaway-cost circuit breaker for LLM and metered API calls. Judges every observed cost against three independent layers: a rolling-median anomaly cap, an absolute per-call ceiling, and a cumulative monthly budget. Zero dependencies, thread-safe, fully typed, 27 tests.
+A runaway-cost circuit breaker for LLM and metered API calls. Judges every observed cost against three independent layers: a rolling-median anomaly cap, an absolute per-call ceiling, and a cumulative monthly budget. Zero dependencies, thread-safe, fully typed, 29 tests.
 
 ```bash
 pip install rolling-cost-cap
@@ -101,3 +101,4 @@ The median is recomputed from a window snapshot on every decision, which is O(n 
 - **`evaluate` is post-call.** It detects that money was spent; it does not prevent the spend. Real prevention lives upstream: bounded retries, `max_tokens` limits, and `check` with estimates where estimation is feasible.
 - **Monthly rollover is calendar-based and UTC by default.** There is no proration and no billing-cycle alignment beyond what a custom `clock` gives you.
 - **No persistence.** A process restart forgets both the window and the month-to-date spend.
+- **Median lookup is O(n log n), not O(1).** `_median()` re-sorts the window on every `evaluate`/`check` call via `statistics.median`. Verified fine through `window=1000` (see Benchmarks); pushing window into the hundreds of thousands would need a two-heap incremental median instead.

@@ -124,6 +124,18 @@ class TestRollingMedian:
         # window now holds only 0.01s, so 1.0 is an anomaly again
         assert not cap.evaluate(1.0).allowed
 
+    def test_median_averages_middle_pair_on_even_window(self):
+        cap = CostCap(min_samples=1)
+        for cost in (0.01, 0.02, 0.03, 0.04):
+            cap.evaluate(cost)
+        assert cap.median == pytest.approx(0.025)
+
+    def test_median_averages_middle_pair_on_two_sample_window(self):
+        cap = CostCap(min_samples=1)
+        cap.evaluate(0.01)
+        cap.evaluate(0.05)
+        assert cap.median == pytest.approx(0.03)
+
 
 class TestMonthlyBudget:
     def test_trips_when_cost_would_exceed_budget(self):
