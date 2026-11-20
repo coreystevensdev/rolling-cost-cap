@@ -24,7 +24,7 @@ Decision precedence: absolute ceiling, then monthly budget, then rolling median.
 
 **Implementation:** The rolling window is a fixed-size `collections.deque`. The median is computed via `statistics.median()` on a snapshot of the deque each evaluation, which is O(n log n). At realistic API-call rates this is noise; the snapshot approach was chosen over a two-heap incremental median because it is simpler to verify and the window is small. A `threading.Lock` guards all reads and writes so `evaluate` and `check` are safe to call from multiple threads or concurrent coroutines.
 
-This design was extracted from the cost-control layer of [InvoiceFlow](https://github.com/coreystevensdev/invoiceflow), where it runs in production as a post-call ceiling on Anthropic API spend.
+This design came from the cost-control layer of [InvoiceFlow](https://github.com/coreystevensdev/invoiceflow), where a TypeScript implementation of the same three rules caps Anthropic API spend in the deployed app. This package is a port of the design, not a dependency of that app, which is a Next.js project and cannot import Python.
 
 ## Usage
 
@@ -84,13 +84,22 @@ Costs must be non-negative finite numbers; `NaN`, infinity, negatives, and non-n
 
 ## Benchmarks
 
-`evaluate` throughput on Apple Silicon (M-series), CPython 3.14, single thread, via `python bench.py`:
+`evaluate` throughput on an Apple M1, CPython 3.14.2, single thread, via
+`PYTHONPATH=src python bench.py`. Best of five repeats after a warm-up pass,
+and three separate invocations agreed within 2%:
 
 | Window | Throughput | Latency |
 |---|---|---|
-| 50 (default) | 72,800 ops/sec | 13.7 us |
-| 200 | 45,400 ops/sec | 22.0 us |
-| 1,000 | 10,700 ops/sec | 93.0 us |
+| 50 (default) | 195,000 ops/sec | 5.1 us |
+| 200 | 77,500 ops/sec | 12.9 us |
+| 1,000 | 15,300 ops/sec | 65.3 us |
+
+These replaced an earlier table that nobody could reproduce. It was measured
+by a single un-warmed pass, which spread about 2x run to run on one machine,
+so the numbers carried three significant figures the harness could not
+support. "Apple Silicon (M-series)" was the other half of the problem, since
+that label spans roughly 2x in single-thread performance; the chip is named
+now.
 
 The median is recomputed from a window snapshot on every decision, which is O(n log n). At realistic API-call rates (tens of calls per second) this is noise; the naive recompute was chosen over an incremental two-heap median because it is simpler to verify and the window is small.
 
