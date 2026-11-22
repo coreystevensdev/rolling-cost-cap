@@ -94,14 +94,6 @@ and three separate invocations agreed within 2%:
 | 200 | 77,500 ops/sec | 12.9 us |
 | 1,000 | 15,300 ops/sec | 65.3 us |
 
-These replaced an earlier table that nobody could reproduce. It was measured
-by a single un-warmed pass, which spread about 2x run to run on one machine,
-so the numbers carried three significant figures the harness could not
-support. "Apple Silicon (M-series)" was the other half of the problem, since
-that label spans roughly 2x in single-thread performance; the chip is named
-now.
-
-The median is recomputed from a window snapshot on every decision, which is O(n log n). At realistic API-call rates (tens of calls per second) this is noise; the naive recompute was chosen over an incremental two-heap median because it is simpler to verify and the window is small.
 
 ## Known limitations
 
