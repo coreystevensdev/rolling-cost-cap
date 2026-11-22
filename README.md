@@ -2,9 +2,9 @@
 
 [![CI](https://github.com/coreystevensdev/rolling-cost-cap/actions/workflows/ci.yml/badge.svg)](https://github.com/coreystevensdev/rolling-cost-cap/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/rolling-cost-cap)](https://pypi.org/project/rolling-cost-cap/)
-![29 tests](https://img.shields.io/badge/tests-29-brightgreen)
+![35 tests](https://img.shields.io/badge/tests-35-brightgreen)
 
-A runaway-cost circuit breaker for LLM and metered API calls. Judges every observed cost against three independent layers: a rolling-median anomaly cap, an absolute per-call ceiling, and a cumulative monthly budget. Zero dependencies, thread-safe, fully typed, 29 tests.
+A runaway-cost circuit breaker for LLM and metered API calls. Judges every observed cost against three independent layers: a rolling-median anomaly cap, an absolute per-call ceiling, and a cumulative monthly budget. Zero dependencies, thread-safe, fully typed, 35 tests.
 
 ```bash
 pip install rolling-cost-cap
@@ -80,7 +80,9 @@ cap = CostCap(monthly_budget=25.0, clock=lambda: datetime(2026, 8, 1, tzinfo=tim
 
 `Decision` is a frozen dataclass: `allowed`, `trip` (`"absolute-ceiling" | "monthly-budget" | "rolling-median" | None`), `observed`, `cap`, `median`, `monthly_spend`. All fields reflect state at decision time, before the cost is recorded.
 
-Costs must be non-negative finite numbers; `NaN`, infinity, negatives, and non-numeric types raise instead of being silently ignored.
+`cap` is whichever limit the cost was measured against, so what it holds depends on `trip`: the absolute ceiling, the monthly budget, or `median * multiplier` both for a rolling-median trip and for an allowed call. It is `None` until the median layer arms. Read it alongside `trip` rather than as one per-call ceiling, or a message like "cost $0.50 exceeded cap $25.00" will print a monthly budget as though it were a limit on that single call.
+
+Costs may be `int`, `float` or `Decimal`, since `Decimal` is what a money caller reaches for first; it is converted once at the boundary and the rolling window stays float. Costs must be non-negative and finite, so `NaN`, infinity, negatives, `bool` and non-numeric types raise instead of being silently ignored.
 
 ## Benchmarks
 

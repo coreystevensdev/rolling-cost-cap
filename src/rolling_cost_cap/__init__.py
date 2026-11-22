@@ -14,11 +14,13 @@ import threading
 from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from decimal import Decimal
 from typing import Callable, Literal
 
 __all__ = ["CostCap", "Decision", "Trip"]
 
 Trip = Literal["absolute-ceiling", "monthly-budget", "rolling-median"]
+Cost = float | int | Decimal
 
 
 @dataclass(frozen=True)
@@ -77,19 +79,19 @@ class CostCap:
         self._monthly_spend = 0.0
         self._lock = threading.Lock()
 
-    def check(self, cost: float) -> Decision:
-        self._validate(cost)
+    def check(self, cost: Cost) -> Decision:
+        cost = self._validate(cost)
         with self._lock:
             self._roll_month()
             return self._decide(cost)
 
-    def record(self, cost: float) -> None:
-        self._validate(cost)
+    def record(self, cost: Cost) -> None:
+        cost = self._validate(cost)
         with self._lock:
             self._roll_month()
             self._append(cost)
 
-    def evaluate(self, cost: float) -> Decision:
+    def evaluate(self, cost: Cost) -> Decision:
         """Judge a cost, then record it.
 
         Recording happens even when the decision trips: the money is already
@@ -97,7 +99,7 @@ class CostCap:
         budget layer under-count. The spike is judged against the history
         that preceded it.
         """
-        self._validate(cost)
+        cost = self._validate(cost)
         with self._lock:
             self._roll_month()
             decision = self._decide(cost)
@@ -121,11 +123,17 @@ class CostCap:
             self._month_key = self._current_month()
             self._monthly_spend = 0.0
 
-    def _validate(self, cost: float) -> None:
-        if not isinstance(cost, (int, float)) or isinstance(cost, bool):
+    def _validate(self, cost: Cost) -> float:
+        # Decimal is the first thing a money caller reaches for, and every
+        # internal path is float, so this is the one place that converts.
+        # isfinite runs before the comparison on purpose: Decimal("NaN") < 0
+        # raises InvalidOperation, and the short circuit never gets there.
+        if isinstance(cost, bool) or not isinstance(cost, (int, float, Decimal)):
             raise TypeError(f"cost must be a number, got {type(cost).__name__}")
-        if not math.isfinite(cost) or cost < 0:
+        value = float(cost)
+        if not math.isfinite(value) or value < 0:
             raise ValueError(f"cost must be a non-negative finite number, got {cost}")
+        return value
 
     def _decide(self, cost: float) -> Decision:
         median = self._median()
@@ -153,7 +161,7 @@ class CostCap:
         return statistics.median(self._history)
 
     def _append(self, cost: float) -> None:
-        self._history.append(float(cost))
+        self._history.append(cost)
         self._monthly_spend += cost
 
     def _current_month(self) -> str:
