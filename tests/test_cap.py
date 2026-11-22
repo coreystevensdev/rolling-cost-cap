@@ -1,5 +1,6 @@
 import threading
 from datetime import datetime, timezone
+from decimal import Decimal
 
 import pytest
 
@@ -60,6 +61,41 @@ class TestCostValidation:
     def test_string_raises_type_error(self):
         with pytest.raises(TypeError):
             CostCap().evaluate("0.02")
+
+    def test_decimal_is_accepted(self):
+        cap = CostCap(monthly_budget=25.0)
+        decision = cap.evaluate(Decimal("0.02"))
+        assert decision.allowed
+        assert decision.observed == 0.02
+
+    def test_decimal_spend_stays_float(self):
+        # the accumulator is a float, so a Decimal that got past the gate
+        # without being converted would raise on the second call, not the first
+        cap = CostCap(monthly_budget=25.0)
+        cap.evaluate(Decimal("1.5"))
+        cap.evaluate(Decimal("2.5"))
+        assert isinstance(cap.monthly_spend, float)
+        assert cap.monthly_spend == 4.0
+
+    def test_decimal_accepted_by_check_and_record(self):
+        cap = CostCap(monthly_budget=5.0)
+        cap.record(Decimal("1.5"))
+        assert cap.monthly_spend == 1.5
+        assert cap.check(Decimal("0.5")).allowed
+
+    def test_decimal_nan_raises_value_error(self):
+        # Decimal("NaN") < 0 raises InvalidOperation, so this also pins the
+        # order of the two checks in _validate
+        with pytest.raises(ValueError):
+            CostCap().evaluate(Decimal("NaN"))
+
+    def test_decimal_infinity_raises(self):
+        with pytest.raises(ValueError):
+            CostCap().evaluate(Decimal("Infinity"))
+
+    def test_decimal_negative_raises(self):
+        with pytest.raises(ValueError):
+            CostCap().evaluate(Decimal("-1"))
 
 
 class TestAbsoluteCeiling:
