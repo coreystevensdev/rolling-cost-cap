@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "rolling-cost-cap"
-version = "0.1.0"
+version = "0.2.0"
 description = "Runaway-cost circuit breaker for LLM and metered API calls: rolling-median anomaly detection, absolute per-call ceiling, monthly budget"
 readme = "README.md"
 requires-python = ">=3.10"
